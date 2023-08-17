@@ -1,11 +1,13 @@
 import {
   createCookieSessionStorageFactory,
   createCookieFactory,
+} from '@remix-run/server-runtime';
+import type {
+  SignFunction,
+  UnsignFunction,
   type SessionStorage,
   type Session,
 } from '@remix-run/server-runtime';
-
-import type {SignFunction, UnsignFunction} from '@remix-run/server-runtime';
 
 const encoder = new TextEncoder();
 
@@ -64,7 +66,10 @@ export class HydrogenSession {
   constructor(
     private sessionStorage: SessionStorage,
     private session: Session,
-  ) {}
+  ) {
+    this.session = session;
+    this.sessionStorage = sessionStorage;
+  }
 
   static async init(request: Request, secrets: string[]) {
     const createCookie = createCookieFactory({sign, unsign});
@@ -83,6 +88,10 @@ export class HydrogenSession {
     const session = await storage.getSession(request.headers.get('Cookie'));
 
     return new this(storage, session);
+  }
+
+  has(key: string) {
+    return this.session.has(key);
   }
 
   get(key: string) {
